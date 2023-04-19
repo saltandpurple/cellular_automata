@@ -5,10 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy import signal
-from cupyx.scipy import signal
 import tqdm
 import video_writer
-
+import cupy as cp
+from cupyx.scipy import signal
 
 # CONFIG
 # VIDEO_WIDTH = 3840
@@ -110,9 +110,7 @@ class Rule30AndGameOfLife:
         self.update_rgb()
 
     def update_rule_kernel(self):
-        self.rule_kernel = np.array([int(x) for x in f'{self.rule:08b}'[::-1]],
-                                    np.uint8)
-
+        self.rule_kernel = np.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
 
     def update_state_gpu(self):
         # Update `rows` (the state of the 2D cellular automaton).
@@ -140,8 +138,7 @@ class Rule30AndGameOfLife:
             transfer_row
         ))
 
-
-def update_state(self):
+    def update_state(self):
         # Update `rows` (the state of the 2D cellular automaton).
         rule_index = signal.convolve2d(self.row[None, :],
                                        self.row_neighbors[None, :],
@@ -167,7 +164,6 @@ def update_state(self):
             transfer_row
         ))
 
-
     def update_decay(self):
         visible_state = np.concatenate(
             (self.gol_state[-self.gol_height:,
@@ -188,15 +184,13 @@ def main():
 
     for _ in tqdm.trange(MAX_STEPS):
         small_frame = animation.rgb
-        # enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
-        # cv2.imshow("CA", small_frame)
-        # cv2.waitKey(1)
+        #enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
+        cv2.imshow("CA", small_frame)
+        cv2.waitKey(1)
 
-    # writer.add_frame(enlarged_frame)
+        # writer.add_frame(enlarged_frame)
         animation.step()
     # writer.write(OUTPUT_PATH)
-
-
 
 
 if __name__ == '__main__':
