@@ -11,10 +11,10 @@ import cupy as cp
 from cupyx.scipy import signal
 
 # CONFIG
-# VIDEO_WIDTH = 3840
-VIDEO_WIDTH = 3000
-# VIDEO_HEIGHT = 2160
-VIDEO_HEIGHT = 1500
+VIDEO_WIDTH = 3840
+# VIDEO_WIDTH = 3000
+VIDEO_HEIGHT = 2160
+# VIDEO_HEIGHT = 2000
 SECS = int(10)  # 3 mins 30 secs.
 PIXEL_SIZE = 2
 OUTPUT_PATH = 'videos/youtube-3m-30s-6px.mp4'
@@ -22,7 +22,7 @@ FPS = 60  # Frames per second.
 HIGH_QUALITY = True
 STATE_WIDTH = VIDEO_WIDTH // PIXEL_SIZE
 STATE_HEIGHT = VIDEO_HEIGHT // PIXEL_SIZE
-MAX_STEPS = 100000
+MAX_STEPS = 10000
 
 # `RULE` specifies which cellular automaton rule to use.
 RULE = 30
@@ -118,7 +118,7 @@ class Rule30AndGameOfLife:
         rule_index = signal.convolve2d(cp.asarray(self.row[None, :]),
                                        cp.asarray(self.row_neighbors[None, :]),
                                        mode='same', boundary='wrap')
-        self.row = self.rule_kernel[rule_index[0].get()]
+        self.row = self.rule_kernel[rule_index[0]]
         transfer_row = self.rows[:1]
         self.rows = cp.concatenate((
             self.rows[1:],
@@ -176,7 +176,7 @@ class Rule30AndGameOfLife:
         self.decay *= 1 - visible_state
 
     def update_rgb(self):
-        self.rgb = self.colors[self.decay.get()]
+        self.rgb = self.colors[self.decay]
 
 
 def main():
@@ -184,14 +184,15 @@ def main():
     animation = Rule30AndGameOfLife(STATE_WIDTH, STATE_HEIGHT)
 
     for _ in tqdm.trange(MAX_STEPS):
-        small_frame = animation.rgb
-        # enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
-        #cv2.imshow("CA", small_frame)
-        #cv2.waitKey(1)
-
         # writer.add_frame(enlarged_frame)
         animation.step()
     # writer.write(OUTPUT_PATH)
+
+    small_frame = animation.rgb.get()
+    enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
+    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_FULLSCREEN )
+    cv2.imshow("CA", enlarged_frame)
+    cv2.waitKey(0)
 
 
 if __name__ == '__main__':
