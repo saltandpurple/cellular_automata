@@ -55,24 +55,24 @@ class Rule30AndGameOfLife:
         self.gol_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2
         self.gol_state_height = self.gol_height + GOL_STATE_HEIGHT_PADDING
 
-        self.gol_state = np.zeros((self.gol_state_height, self.gol_state_width),
-                                  np.uint8)
+        self.gol_state = cp.zeros((self.gol_state_height, self.gol_state_width),
+                                  cp.uint8)
 
         self.row_padding = num_frames // 2
         self.row_width = self.gol_state_width + self.row_padding * 2
-        self.row = np.zeros(self.row_width, np.uint8)
+        self.row = cp.zeros(self.row_width, cp.uint8)
         self.row[self.row_width // 2 + X_OFFSET] = 1
 
         self.rows_height = self.height - self.gol_height
-        self.rows = np.concatenate((
-            np.zeros((self.rows_height - 1, self.gol_state_width), np.uint8),
+        self.rows = cp.concatenate((
+            cp.zeros((self.rows_height - 1, self.gol_state_width), cp.uint8),
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
-        self.row_neighbors = np.array([1, 2, 4], dtype=np.uint8)
-        self.gol_neighbors = np.array([[1, 1, 1],
+        self.row_neighbors = cp.array([1, 2, 4], dtype=cp.uint8)
+        self.gol_neighbors = cp.array([[1, 1, 1],
                                        [1, 0, 1],
-                                       [1, 1, 1]], dtype=np.uint8)
+                                       [1, 1, 1]], dtype=cp.uint8)
         self.rule = RULE
         self.rule_kernel = None
         self.update_rule_kernel()
@@ -94,9 +94,9 @@ class Rule30AndGameOfLife:
         color_list += [colour.Color('black')]
         rgb_list = [c.rgb for c in color_list]
 
-        self.colors = (np.array(rgb_list, float) * 255).astype(np.uint8)
+        self.colors = (cp.array(rgb_list, float) * 255).astype(cp.uint8)
 
-        self.decay = np.full((self.height, self.width), len(self.colors) - 1,
+        self.decay = cp.full((self.height, self.width), len(self.colors) - 1,
                              int)
 
         self.rgb = None
@@ -110,14 +110,14 @@ class Rule30AndGameOfLife:
         self.update_rgb()
 
     def update_rule_kernel(self):
-        self.rule_kernel = np.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
+        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], cp.uint8)
 
     def update_state_gpu(self):
         # Update `rows` (the state of the 2D cellular automaton).
         rule_index = signal.convolve2d(cp.asarray(self.row[None, :]),
                                        cp.asarray(self.row_neighbors[None, :]),
                                        mode='same', boundary='wrap')
-        self.row = self.rule_kernel[rule_index[0]]
+        self.row = self.rule_kernel[rule_index[0].get()]
         transfer_row = self.rows[:1]
         self.rows = cp.concatenate((
             self.rows[1:],
@@ -145,7 +145,7 @@ class Rule30AndGameOfLife:
                                        mode='same', boundary='wrap')
         self.row = self.rule_kernel[rule_index[0]]
         transfer_row = self.rows[:1]
-        self.rows = np.concatenate((
+        self.rows = cp.concatenate((
             self.rows[1:],
             self.row[None, self.row_padding:-self.row_padding]
         ))
@@ -153,25 +153,25 @@ class Rule30AndGameOfLife:
         # Update `gol_state` (the state of the 3D cellular automaton).
         num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors,
                                           mode='same', boundary='wrap')
-        self.gol_state = np.logical_or(num_neighbors == 3,
-                                       np.logical_and(num_neighbors == 2,
+        self.gol_state = cp.logical_or(num_neighbors == 3,
+                                       cp.logical_and(num_neighbors == 2,
                                                       self.gol_state)
-                                       ).astype(np.uint8)
+                                       ).astype(cp.uint8)
 
-        self.gol_state = np.concatenate((
-            np.zeros((1, self.gol_state_width), np.uint8),
+        self.gol_state = cp.concatenate((
+            cp.zeros((1, self.gol_state_width), cp.uint8),
             self.gol_state[1:-1],
             transfer_row
         ))
 
     def update_decay(self):
-        visible_state = np.concatenate(
+        visible_state = cp.concatenate(
             (self.gol_state[-self.gol_height:,
              GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
              self.rows[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
             axis=0)
         self.decay += 1
-        self.decay = np.clip(self.decay, None, len(self.colors) - 1)
+        self.decay = cp.clip(self.decay, None, len(self.colors) - 1)
         self.decay *= 1 - visible_state
 
     def update_rgb(self):
