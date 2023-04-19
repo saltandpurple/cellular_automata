@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy import signal
 import tqdm
-import video_writer
+# import video_writer
 import cupy as cp
 from cupyx.scipy import signal
 
