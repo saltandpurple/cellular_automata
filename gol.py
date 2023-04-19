@@ -12,11 +12,11 @@ from cupyx.scipy import signal
 
 # CONFIG
 # VIDEO_WIDTH = 3840
-VIDEO_WIDTH = 1000
+VIDEO_WIDTH = 3000
 # VIDEO_HEIGHT = 2160
-VIDEO_HEIGHT = 2160
+VIDEO_HEIGHT = 1500
 SECS = int(10)  # 3 mins 30 secs.
-PIXEL_SIZE = 3
+PIXEL_SIZE = 2
 OUTPUT_PATH = 'videos/youtube-3m-30s-6px.mp4'
 FPS = 60  # Frames per second.
 HIGH_QUALITY = True
@@ -94,7 +94,8 @@ class Rule30AndGameOfLife:
         color_list += [colour.Color('black')]
         rgb_list = [c.rgb for c in color_list]
 
-        self.colors = (np.array(rgb_list, float) * 255).astype(np.uint8)
+        # this must be done with numpy, if display output is to be shown
+        self.colors = (cp.array(rgb_list, float) * 255).astype(np.uint8)
 
         self.decay = cp.full((self.height, self.width), len(self.colors) - 1,
                              int)
@@ -184,7 +185,7 @@ def main():
 
     for _ in tqdm.trange(MAX_STEPS):
         small_frame = animation.rgb
-        #enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
+        # enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
         #cv2.imshow("CA", small_frame)
         #cv2.waitKey(1)
 
