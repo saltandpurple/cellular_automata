@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy import signal
 import tqdm
-# import video_writer
+#import video_writer
 import cupy as cp
 from cupyx.scipy import signal
 
@@ -56,23 +56,23 @@ class Rule30AndGameOfLife:
         self.gol_state_height = self.gol_height + GOL_STATE_HEIGHT_PADDING
 
         self.gol_state = cp.zeros((self.gol_state_height, self.gol_state_width),
-                                  cp.uint8)
+                                  np.uint8)
 
         self.row_padding = num_frames // 2
         self.row_width = self.gol_state_width + self.row_padding * 2
-        self.row = cp.zeros(self.row_width, cp.uint8)
+        self.row = cp.zeros(self.row_width, np.uint8)
         self.row[self.row_width // 2 + X_OFFSET] = 1
 
         self.rows_height = self.height - self.gol_height
         self.rows = cp.concatenate((
-            cp.zeros((self.rows_height - 1, self.gol_state_width), cp.uint8),
+            cp.zeros((self.rows_height - 1, self.gol_state_width), np.uint8),
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
-        self.row_neighbors = cp.array([1, 2, 4], dtype=cp.uint8)
+        self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
         self.gol_neighbors = cp.array([[1, 1, 1],
                                        [1, 0, 1],
-                                       [1, 1, 1]], dtype=cp.uint8)
+                                       [1, 1, 1]], dtype=np.uint8)
         self.rule = RULE
         self.rule_kernel = None
         self.update_rule_kernel()
@@ -94,7 +94,7 @@ class Rule30AndGameOfLife:
         color_list += [colour.Color('black')]
         rgb_list = [c.rgb for c in color_list]
 
-        self.colors = (cp.array(rgb_list, float) * 255).astype(cp.uint8)
+        self.colors = (np.array(rgb_list, float) * 255).astype(np.uint8)
 
         self.decay = cp.full((self.height, self.width), len(self.colors) - 1,
                              int)
@@ -105,12 +105,12 @@ class Rule30AndGameOfLife:
         self.update_rgb()
 
     def step(self):
-        self.update_state()
+        self.update_state_gpu()
         self.update_decay()
         self.update_rgb()
 
     def update_rule_kernel(self):
-        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], cp.uint8)
+        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
 
     def update_state_gpu(self):
         # Update `rows` (the state of the 2D cellular automaton).
@@ -138,31 +138,31 @@ class Rule30AndGameOfLife:
             transfer_row
         ))
 
-    def update_state(self):
-        # Update `rows` (the state of the 2D cellular automaton).
-        rule_index = signal.convolve2d(self.row[None, :],
-                                       self.row_neighbors[None, :],
-                                       mode='same', boundary='wrap')
-        self.row = self.rule_kernel[rule_index[0]]
-        transfer_row = self.rows[:1]
-        self.rows = cp.concatenate((
-            self.rows[1:],
-            self.row[None, self.row_padding:-self.row_padding]
-        ))
-
-        # Update `gol_state` (the state of the 3D cellular automaton).
-        num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors,
-                                          mode='same', boundary='wrap')
-        self.gol_state = cp.logical_or(num_neighbors == 3,
-                                       cp.logical_and(num_neighbors == 2,
-                                                      self.gol_state)
-                                       ).astype(cp.uint8)
-
-        self.gol_state = cp.concatenate((
-            cp.zeros((1, self.gol_state_width), cp.uint8),
-            self.gol_state[1:-1],
-            transfer_row
-        ))
+    # def update_state(self):
+    #     # Update `rows` (the state of the 2D cellular automaton).
+    #     rule_index = signal.convolve2d(self.row[None, :],
+    #                                    self.row_neighbors[None, :],
+    #                                    mode='same', boundary='wrap')
+    #     self.row = self.rule_kernel[rule_index[0]]
+    #     transfer_row = self.rows[:1]
+    #     self.rows = np.concatenate((
+    #         self.rows[1:],
+    #         self.row[None, self.row_padding:-self.row_padding]
+    #     ))
+    #
+    #     # Update `gol_state` (the state of the 3D cellular automaton).
+    #     num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors,
+    #                                       mode='same', boundary='wrap')
+    #     self.gol_state = np.logical_or(num_neighbors == 3,
+    #                                    np.logical_and(num_neighbors == 2,
+    #                                                   self.gol_state)
+    #                                    ).astype(np.uint8)
+    #
+    #     self.gol_state = np.concatenate((
+    #         np.zeros((1, self.gol_state_width), np.uint8),
+    #         self.gol_state[1:-1],
+    #         transfer_row
+    #     ))
 
     def update_decay(self):
         visible_state = cp.concatenate(
@@ -175,7 +175,7 @@ class Rule30AndGameOfLife:
         self.decay *= 1 - visible_state
 
     def update_rgb(self):
-        self.rgb = self.colors[self.decay]
+        self.rgb = self.colors[self.decay.get()]
 
 
 def main():
@@ -185,8 +185,8 @@ def main():
     for _ in tqdm.trange(MAX_STEPS):
         small_frame = animation.rgb
         #enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
-        cv2.imshow("CA", small_frame)
-        cv2.waitKey(1)
+        #cv2.imshow("CA", small_frame)
+        #cv2.waitKey(1)
 
         # writer.add_frame(enlarged_frame)
         animation.step()
