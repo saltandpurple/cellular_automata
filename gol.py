@@ -6,23 +6,19 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy import signal
 import tqdm
-#import video_writer
+# import video_writer
 import cupy as cp
 from cupyx.scipy import signal
 
-# CONFIG
-VIDEO_WIDTH = 3840
-# VIDEO_WIDTH = 3000
-VIDEO_HEIGHT = 2160
-# VIDEO_HEIGHT = 2000
-SECS = int(10)  # 3 mins 30 secs.
-PIXEL_SIZE = 2
-OUTPUT_PATH = 'videos/youtube-3m-30s-6px.mp4'
-FPS = 60  # Frames per second.
-HIGH_QUALITY = True
-STATE_WIDTH = VIDEO_WIDTH // PIXEL_SIZE
-STATE_HEIGHT = VIDEO_HEIGHT // PIXEL_SIZE
-MAX_STEPS = 10000
+# TODO: cleanup superfluous params
+# VIDEO CONFIG
+# VIDEO_WIDTH = 3840
+# VIDEO_HEIGHT = 2160
+# SECS = int(10)  # 3 mins 30 secs.
+# PIXEL_SIZE = 1
+# OUTPUT_PATH = 'videos/youtube-3m-30s-6px.mp4'
+# FPS = 60  # Frames per second.
+# HIGH_QUALITY = True
 
 # `RULE` specifies which cellular automaton rule to use.
 RULE = 30
@@ -40,13 +36,19 @@ X_OFFSET = 0
 # By adding padding to the state, you extend the state beyond the edges of the
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
-GOL_STATE_WIDTH_PADDING = VIDEO_WIDTH
-GOL_STATE_HEIGHT_PADDING = VIDEO_HEIGHT
+STATE_WIDTH = 3840 // 2
+STATE_HEIGHT = 2160 // 2
+GOL_STATE_WIDTH_PADDING = STATE_WIDTH
+GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
+# The part of the screen that is made up by the GOL (the rest is the rule feed preview)
+GOL_PERCENTAGE = 0.8
+# How long to run
+MAX_STEPS = 10000
 
 
 class Rule30AndGameOfLife:
     def __init__(self, width, height,
-                 gol_percentage=0.5,
+                 gol_percentage=GOL_PERCENTAGE,
                  num_frames=MAX_STEPS):
         self.width = width
         self.height = height
@@ -106,15 +108,15 @@ class Rule30AndGameOfLife:
         self.update_rgb()
 
     def step(self):
-        self.update_state_gpu()
+        self.update_state()
         self.update_decay()
         self.update_rgb()
 
     def update_rule_kernel(self):
         self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
 
-    def update_state_gpu(self):
-        # Update `rows` (the state of the 2D cellular automaton).
+    def update_state(self):
+        # Update `rows` (the state of the 1D cellular automaton).
         rule_index = signal.convolve2d(cp.asarray(self.row[None, :]),
                                        cp.asarray(self.row_neighbors[None, :]),
                                        mode='same', boundary='wrap')
@@ -125,45 +127,16 @@ class Rule30AndGameOfLife:
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
-        # Update `gol_state` (the state of the 3D cellular automaton).
-        num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors,
-                                          mode='same', boundary='wrap')
-        self.gol_state = cp.logical_or(num_neighbors == 3,
-                                       cp.logical_and(num_neighbors == 2,
-                                                      self.gol_state)
-                                       ).astype(cp.uint8)
+        # Update `gol_state` (the state of the 2D cellular automaton).
+        num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors, mode='same', boundary='wrap')
+        self.gol_state = cp.logical_or(num_neighbors == 3, cp.logical_and(num_neighbors == 2, self.gol_state)).astype(cp.uint8)
 
+        # Add empty row, gol_state (minus top and bottom) and the feed row
         self.gol_state = cp.concatenate((
-            cp.zeros((1, self.gol_state_width), cp.uint8),
+            transfer_row,
             self.gol_state[1:-1],
-            transfer_row
+            cp.zeros((1, self.gol_state_width), cp.uint8)
         ))
-
-    # def update_state(self):
-    #     # Update `rows` (the state of the 2D cellular automaton).
-    #     rule_index = signal.convolve2d(self.row[None, :],
-    #                                    self.row_neighbors[None, :],
-    #                                    mode='same', boundary='wrap')
-    #     self.row = self.rule_kernel[rule_index[0]]
-    #     transfer_row = self.rows[:1]
-    #     self.rows = np.concatenate((
-    #         self.rows[1:],
-    #         self.row[None, self.row_padding:-self.row_padding]
-    #     ))
-    #
-    #     # Update `gol_state` (the state of the 3D cellular automaton).
-    #     num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors,
-    #                                       mode='same', boundary='wrap')
-    #     self.gol_state = np.logical_or(num_neighbors == 3,
-    #                                    np.logical_and(num_neighbors == 2,
-    #                                                   self.gol_state)
-    #                                    ).astype(np.uint8)
-    #
-    #     self.gol_state = np.concatenate((
-    #         np.zeros((1, self.gol_state_width), np.uint8),
-    #         self.gol_state[1:-1],
-    #         transfer_row
-    #     ))
 
     def update_decay(self):
         visible_state = cp.concatenate(
@@ -189,8 +162,8 @@ def main():
     # writer.write(OUTPUT_PATH)
 
     small_frame = animation.rgb.get()
-    enlarged_frame = imutils.resize(small_frame, VIDEO_WIDTH, VIDEO_HEIGHT, cv2.INTER_NEAREST)
-    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_FULLSCREEN )
+    enlarged_frame = imutils.resize(small_frame, STATE_WIDTH * 2, STATE_HEIGHT * 2, cv2.INTER_NEAREST)
+    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_FREERATIO)
     cv2.imshow("CA", enlarged_frame)
     cv2.waitKey(0)
 
