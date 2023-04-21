@@ -36,14 +36,14 @@ X_OFFSET = 0
 # By adding padding to the state, you extend the state beyond the edges of the
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
-STATE_WIDTH = 3840 // 2
-STATE_HEIGHT = 2160 // 2
+STATE_WIDTH = 3846 // 2
+STATE_HEIGHT = 3000 // 6
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 GOL_PERCENTAGE = 0.8
 # How long to run
-MAX_STEPS = 10000
+MAX_STEPS = 100000
 
 
 class Rule30AndGameOfLife:
@@ -54,8 +54,8 @@ class Rule30AndGameOfLife:
         self.height = height
 
         self.gol_height = int(height * gol_percentage)
-        self.gol_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2
-        self.gol_state_height = self.gol_height + GOL_STATE_HEIGHT_PADDING
+        self.gol_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create gol width and add padding
+        self.gol_state_height = self.gol_height  # No padding added in gol height, so we can see the whole state
 
         self.gol_state = cp.zeros((self.gol_state_height, self.gol_state_width),
                                   np.uint8)
@@ -135,15 +135,22 @@ class Rule30AndGameOfLife:
         self.gol_state = cp.concatenate((
             transfer_row,
             self.gol_state[1:-1],
-            cp.zeros((1, self.gol_state_width), cp.uint8)
+            transfer_row
         ))
+        #  cp.zeros((1, self.gol_state_width), cp.uint8)
 
+    # Glue the feed and gol state together and apply the (purely visual) decay function
     def update_decay(self):
+        # visible_state = cp.concatenate(
+        #     (self.gol_state[-self.gol_height:,
+        #      GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
+        #      self.rows[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
+        #     axis=0)
         visible_state = cp.concatenate(
-            (self.gol_state[-self.gol_height:,
-             GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
+            (self.gol_state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
              self.rows[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
             axis=0)
+
         self.decay += 1
         self.decay = cp.clip(self.decay, None, len(self.colors) - 1)
         self.decay *= 1 - visible_state
