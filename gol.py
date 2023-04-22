@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from scipy import signal
 import tqdm
-# import video_writer
 import cupy as cp
 from cupyx.scipy import signal
 
@@ -37,13 +36,18 @@ X_OFFSET = 0
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
 STATE_WIDTH = 3846 // 2
-STATE_HEIGHT = 3000 // 6
+STATE_HEIGHT = 3000 // 3
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
+
 # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 GOL_PERCENTAGE = 0.8
+
 # How long to run
-MAX_STEPS = 100000
+MAX_STEPS = 1200000
+
+# How often to show the state
+DISPLAY_INTERVAL = 1000
 
 
 class Rule30AndGameOfLife:
@@ -91,17 +95,14 @@ class Rule30AndGameOfLife:
         assert len(hex_colors) == len(color_decay_times) + 1
         color_list = [colour.Color('white')]
         for i in range(len(hex_colors) - 1):
-            color_list += list(colour.Color(hex_colors[i]).range_to(
-                colour.Color(hex_colors[i + 1]), color_decay_times[i]))
+            color_list += list(colour.Color(hex_colors[i]).
+                               range_to(colour.Color(hex_colors[i + 1]), color_decay_times[i]))
         color_list += [colour.Color('black')]
         rgb_list = [c.rgb for c in color_list]
 
         # this must be done with numpy, if display output is to be shown
         self.colors = (cp.array(rgb_list, float) * 255).astype(np.uint8)
-
-        self.decay = cp.full((self.height, self.width), len(self.colors) - 1,
-                             int)
-
+        self.decay = cp.full((self.height, self.width), len(self.colors) - 1, int)
         self.rgb = None
 
         self.update_decay()
@@ -117,8 +118,8 @@ class Rule30AndGameOfLife:
 
     def update_state(self):
         # Update `rows` (the state of the 1D cellular automaton).
-        rule_index = signal.convolve2d(cp.asarray(self.row[None, :]),
-                                       cp.asarray(self.row_neighbors[None, :]),
+        rule_index = signal.convolve2d(self.row[None, :],
+                                       self.row_neighbors[None, :],
                                        mode='same', boundary='wrap')
         self.row = self.rule_kernel[rule_index[0]]
         transfer_row = self.rows[:1]
@@ -133,7 +134,7 @@ class Rule30AndGameOfLife:
 
         # Add empty row, gol_state (minus top and bottom) and the feed row
         self.gol_state = cp.concatenate((
-            transfer_row,
+            cp.zeros((1, self.gol_state_width), cp.uint8),
             self.gol_state[1:-1],
             transfer_row
         ))
@@ -141,11 +142,6 @@ class Rule30AndGameOfLife:
 
     # Glue the feed and gol state together and apply the (purely visual) decay function
     def update_decay(self):
-        # visible_state = cp.concatenate(
-        #     (self.gol_state[-self.gol_height:,
-        #      GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
-        #      self.rows[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
-        #     axis=0)
         visible_state = cp.concatenate(
             (self.gol_state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
              self.rows[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
@@ -158,21 +154,28 @@ class Rule30AndGameOfLife:
     def update_rgb(self):
         self.rgb = self.colors[self.decay]
 
+    # Display the current state of the given animation for duration milliseconds
+    @staticmethod
+    def display_state(animation, duration):
+        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.rgb), cv2.COLOR_BGR2RGB)
+        # We need to convert BGR to OpenCVs RGB
+        cv2.imshow("CA", state_in_rgb)
+        cv2.waitKey(duration)
+
 
 def main():
     # writer = video_writer.Writer(fps=FPS, high_quality=HIGH_QUALITY)
     animation = Rule30AndGameOfLife(STATE_WIDTH, STATE_HEIGHT)
+    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_AUTOSIZE)
 
-    for _ in tqdm.trange(MAX_STEPS):
-        # writer.add_frame(enlarged_frame)
+    # Step through the animation and display the current state every DISPLAY_INTERVAL steps
+    for step in tqdm.trange(MAX_STEPS):
+        if step % DISPLAY_INTERVAL == 0:
+            Rule30AndGameOfLife.display_state(animation, 1)
         animation.step()
-    # writer.write(OUTPUT_PATH)
 
-    small_frame = animation.rgb.get()
-    enlarged_frame = imutils.resize(small_frame, STATE_WIDTH * 2, STATE_HEIGHT * 2, cv2.INTER_NEAREST)
-    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_FREERATIO)
-    cv2.imshow("CA", enlarged_frame)
-    cv2.waitKey(0)
+    # Display the final state until key pressed
+    Rule30AndGameOfLife.display_state(animation, 0)
 
 
 if __name__ == '__main__':
