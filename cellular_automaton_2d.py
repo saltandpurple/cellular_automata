@@ -2,12 +2,15 @@ import colour
 import cv2
 import imutils
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from scipy import signal
-import tqdm
 import cupy as cp
+import matplotlib.animation as animation
+import tqdm
 from cupyx.scipy import signal
+import ruleset_gol
+
+# from scipy import signal
+# import matplotlib.pyplot as plt
+
 
 # TODO: cleanup superfluous params
 # VIDEO CONFIG
@@ -37,42 +40,38 @@ GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
 DISPLAY_INTERVAL = 1000  # How often to visually update the state
-ENTROPY_ENABLED = False
-ENTROPY_FACTOR = 0.999999  # The randomness in the grid state - a higher number means lower entropy! 0 means total randomness, 1 no randomness
 
 RULE = 30  # `RULE` specifies which cellular automaton rule to use.
 X_OFFSET = 0  # `X_OFFSET` specifies how far from the center to place the initial first pixel.
 
 
-class Rule30AndGameOfLife:
+class CellularAutomaton2D:
     def __init__(self, width, height,
-                 gol_percentage=GOL_PERCENTAGE,
+                 ca_percentage=GOL_PERCENTAGE,
                  num_frames=MAX_STEPS):
         self.width = width
         self.height = height
 
-        self.gol_height = int(height * gol_percentage)
-        self.gol_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create gol width and add padding
-        self.gol_state_height = self.gol_height  # No padding added in gol height, so we can see the whole state
+        self.ca_height = int(height * ca_percentage)
+        self.ca_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create ca width and add padding
+        self.ca_state_height = self.ca_height  # No padding added in ca height, so we can see the whole state
 
-        self.gol_state = cp.zeros((self.gol_state_height, self.gol_state_width), np.uint8)
-        self.entropy = cp.zeros((self.gol_state_height, self.gol_state_width))
+        self.ca_state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
+        self.entropy = cp.zeros((self.ca_state_height, self.ca_state_width))
 
         self.row_padding = num_frames // 2
-        self.row_width = self.gol_state_width + self.row_padding * 2
+        self.row_width = self.ca_state_width + self.row_padding * 2
         self.row = cp.zeros(self.row_width, np.uint8)
         self.row[self.row_width // 2 + X_OFFSET] = 1
 
-        self.rule_feed_height = self.height - self.gol_height
+        self.rule_feed_height = self.height - self.ca_height
         self.rule_feed = cp.concatenate((
-            cp.zeros((self.rule_feed_height - 1, self.gol_state_width), np.uint8),
+            cp.zeros((self.rule_feed_height - 1, self.ca_state_width), np.uint8),
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
         self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
-        self.gol_neighbors = cp.array([[1, 1, 1],
-                                       [1, 0, 1],
-                                       [1, 1, 1]], dtype=np.uint8)
+        self.ruleset = ruleset_gol.RulesetGameOfLife()
         self.rule = RULE
         self.rule_kernel = None
         self.update_rule_kernel()
@@ -104,7 +103,7 @@ class Rule30AndGameOfLife:
 
     def step(self):
         self.update_rule_feed()
-        self.update_gol_state()
+        self.update_ca_state()
         self.update_decay()
         self.update_rgb()
 
@@ -124,36 +123,24 @@ class Rule30AndGameOfLife:
 
     """ 
     Determine the new state of the Cellular automaton.
-     
-    First, apply the CA ruleset. We currently use Conway's Game Of Life ruleset: 
-    A cell survives, if it has 2 or 3 neighbors. A cell is born, if it has exactly 3 neighbors. Otherwise, the cell dies.
-    Then, generate the entropy grid which is consequently used to partially randomize the gol state.
-    This currently works as follows:
-    With a chance of ENTROPY_FACTOR, flip a cell of the rulegrid to its opposite state.
-    This is intended to break up stale constellations.
     """
-    def update_gol_state(self):
-        # Update GOL state
-        num_neighbors = signal.convolve2d(self.gol_state, self.gol_neighbors, mode='same', boundary='wrap')
-        self.gol_state = cp.logical_or(num_neighbors == 3, cp.logical_and(num_neighbors == 2, self.gol_state)).astype(cp.uint8)
 
-        # Generate and apply entropy
-        if ENTROPY_ENABLED:
-          self.entropy = cp.random.rand(self.gol_state_height, self.gol_state_width)
-          self.gol_state = cp.logical_xor(cp.logical_and(self.entropy < ENTROPY_FACTOR, self.gol_state == 1), cp.logical_and(self.entropy >= ENTROPY_FACTOR, self.gol_state == 0)).astype(cp.uint8)
+    def update_ca_state(self):
+        # Update ca_state according to the defined ruleset
+        self.ca_state = self.ruleset.calculate_next_state(self.ca_state)
 
         # Concatenate empty row, GOL state (minus top and bottom row) and the feed row
         feed_row = self.rule_feed[:1]
-        self.gol_state = cp.concatenate((
-            cp.zeros((1, self.gol_state_width), cp.uint8),
-            self.gol_state[1:-1],
+        self.ca_state = cp.concatenate((
+            cp.zeros((1, self.ca_state_width), cp.uint8),
+            self.ca_state[1:-1],
             feed_row
         ))
 
-    # Glue the feed and gol state together and apply the (purely visual) decay function
+    # Glue the feed and ca state together and apply the (purely visual) decay function
     def update_decay(self):
         visible_state = cp.concatenate(
-            (self.gol_state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
+            (self.ca_state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
              self.rule_feed[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
             axis=0)
 
@@ -175,17 +162,17 @@ class Rule30AndGameOfLife:
 
 def main():
     # writer = video_writer.Writer(fps=FPS, high_quality=HIGH_QUALITY)
-    animation = Rule30AndGameOfLife(STATE_WIDTH, STATE_HEIGHT)
-    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO )
+    animation = CellularAutomaton2D(STATE_WIDTH, STATE_HEIGHT)
+    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
 
     # Step through the animation and display the current state every DISPLAY_INTERVAL steps
     for step in tqdm.trange(MAX_STEPS):
         if step % DISPLAY_INTERVAL == 0:
-            Rule30AndGameOfLife.display_state(animation, 1)
+            CellularAutomaton2D.display_state(animation, 1)
         animation.step()
 
     # Display the final state until key pressed
-    Rule30AndGameOfLife.display_state(animation, 0)
+    CellularAutomaton2D.display_state(animation, 0)
 
 
 if __name__ == '__main__':
