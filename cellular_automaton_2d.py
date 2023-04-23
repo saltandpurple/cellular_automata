@@ -6,7 +6,7 @@ import cupy as cp
 import matplotlib.animation as animation
 import tqdm
 from cupyx.scipy import signal
-import ruleset_gol
+from ruleset_gol import RulesetGameOfLife
 
 # from scipy import signal
 # import matplotlib.pyplot as plt
@@ -71,7 +71,7 @@ class CellularAutomaton2D:
         ))
 
         self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
-        self.ruleset = ruleset_gol.RulesetGameOfLife()
+        self.ruleset = RulesetGameOfLife()
         self.rule = RULE
         self.rule_kernel = None
         self.update_rule_kernel()
@@ -124,7 +124,6 @@ class CellularAutomaton2D:
     """ 
     Determine the new state of the Cellular automaton.
     """
-
     def update_ca_state(self):
         # Update ca_state according to the defined ruleset
         self.ca_state = self.ruleset.calculate_next_state(self.ca_state)

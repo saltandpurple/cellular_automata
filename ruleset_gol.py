@@ -1,10 +1,13 @@
 import cupy as cp
 import numpy as np
 from cupyx.scipy import signal
+from ruleset_interface import RulesetInterface
 
-class RulesetGameOfLife:
+
+class RulesetGameOfLife(RulesetInterface):
 
     def __init__(self):
+        super().__init__()
         self.neighbours = cp.array([[1, 1, 1],
                                     [1, 0, 1],
                                     [1, 1, 1]], dtype=np.uint8)
