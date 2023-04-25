@@ -7,20 +7,8 @@ import matplotlib.animation as animation
 import tqdm
 from cupyx.scipy import signal
 from ruleset_gol import RulesetGameOfLife
+from ruleset_mnca import RulesetMultipleNeighbourhoods
 
-# from scipy import signal
-# import matplotlib.pyplot as plt
-
-
-# TODO: cleanup superfluous params
-# VIDEO CONFIG
-# VIDEO_WIDTH = 3840
-# VIDEO_HEIGHT = 2160
-# SECS = int(10)  # 3 mins 30 secs.
-# PIXEL_SIZE = 1
-# OUTPUT_PATH = 'videos/youtube-3m-30s-6px.mp4'
-# FPS = 60  # Frames per second.
-# HIGH_QUALITY = True
 
 # These settings can be used for rule 110, which only grows to the left, so we
 # offset the starting pixel to be close to the right edge of the screen.
@@ -32,6 +20,7 @@ from ruleset_gol import RulesetGameOfLife
 # By adding padding to the state, you extend the state beyond the edges of the
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
+# TODO: cleanup the padding, we don't need it anymore
 STATE_WIDTH = 4000
 STATE_HEIGHT = 1500
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
@@ -52,11 +41,11 @@ class CellularAutomaton2D:
         self.width = width
         self.height = height
 
-        self.ca_height = int(height * ca_percentage)
+        self.ca_height = int(self.height * ca_percentage)
         self.ca_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create ca width and add padding
         self.ca_state_height = self.ca_height  # No padding added in ca height, so we can see the whole state
 
-        self.ca_state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
+        self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
         self.entropy = cp.zeros((self.ca_state_height, self.ca_state_width))
 
         self.row_padding = num_frames // 2
@@ -71,7 +60,9 @@ class CellularAutomaton2D:
         ))
 
         self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
-        self.ruleset = RulesetGameOfLife()
+
+        # Choose your ruleset here
+        self.ruleset = RulesetMultipleNeighbourhoods()
         self.rule = RULE
         self.rule_kernel = None
         self.update_rule_kernel()
@@ -96,14 +87,14 @@ class CellularAutomaton2D:
         # this must be done with numpy, if display output is to be shown
         self.colors = (cp.array(rgb_list, float) * 255).astype(np.uint8)
         self.decay = cp.full((self.height, self.width), len(self.colors) - 1, int)
-        self.rgb = None
+        self.bgr = None
 
         self.update_decay()
         self.update_rgb()
 
     def step(self):
         self.update_rule_feed()
-        self.update_ca_state()
+        self.update_state()
         self.update_decay()
         self.update_rgb()
 
@@ -124,22 +115,22 @@ class CellularAutomaton2D:
     """ 
     Determine the new state of the Cellular automaton.
     """
-    def update_ca_state(self):
+    def update_state(self):
         # Update ca_state according to the defined ruleset
-        self.ca_state = self.ruleset.calculate_next_state(self.ca_state)
+        self.state = self.ruleset.calculate_next_state(self.state)
 
         # Concatenate empty row, GOL state (minus top and bottom row) and the feed row
         feed_row = self.rule_feed[:1]
-        self.ca_state = cp.concatenate((
+        self.state = cp.concatenate((
             cp.zeros((1, self.ca_state_width), cp.uint8),
-            self.ca_state[1:-1],
+            self.state[1:-1],
             feed_row
         ))
 
     # Glue the feed and ca state together and apply the (purely visual) decay function
     def update_decay(self):
         visible_state = cp.concatenate(
-            (self.ca_state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
+            (self.state[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING],
              self.rule_feed[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
             axis=0)
 
@@ -148,13 +139,13 @@ class CellularAutomaton2D:
         self.decay *= 1 - visible_state
 
     def update_rgb(self):
-        self.rgb = self.colors[self.decay]
+        self.bgr = self.colors[self.decay]
 
-    # Display the current state of the given animation for duration milliseconds
+    # Display the current state of the given animation for milliseconds duration
     @staticmethod
     def display_state(animation, duration):
-        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.rgb), cv2.COLOR_BGR2RGB)
         # We need to convert BGR to OpenCVs RGB
+        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
         cv2.imshow("CA", state_in_rgb)
         cv2.waitKey(duration)
 

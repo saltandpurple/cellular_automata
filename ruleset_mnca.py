@@ -9,8 +9,10 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     def __init__(self):
         super().__init__()
         self.step = 0
+
         self.neighbours = []
-        # Define the different neighbourhoods for each step (the order matters!)
+        # TODO: replace this with an import and editor functionality
+        # Define the different neighbourhoods for each step
         self.neighbours.append(cp.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -97,13 +99,42 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                                         dtype=cp.uint8))
 
+        self.conditions = []
+        # Step 0
+        # If the cell has between 0 and 17 neighbours, it dies.
+        # If the cell has between 40 and 42 neighbours, it lives/spawns.
+        self.conditions.append(lambda cell_state, neighbours: 0 if (0 >= neighbours <= 17) else 1 if (40 >= neighbours <= 42) else cell_state)
+
+        # Step 1
+        # If the cell has between 10 and 13 neighbours, it lives/spawns.
+        self.conditions.append(lambda cell_state, neighbours: 1 if (10 >= neighbours <= 13) else cell_state)
+
+        # Step 2
+        # If the cell has between 9 and 21 neighbours, it dies.
+        self.conditions.append(lambda cell_state, neighbours: 0 if (9 >= neighbours <= 21) else cell_state)
+
+        # Step 3
+        # If the cell has between 78 and 89 neighbours, it dies.
+        # If the cell has more than 108 neighbours, it dies.
+        self.conditions.append(lambda cell_state, neighbours: 0 if (78 >= neighbours <= 89 or 108 <= neighbours) else cell_state)
+
+
     """
     Multiple Neighbourhoods rules:
-    A cell survives, if it has 2 or 3 neighbours.
-    A cell is born, if it has exactly 3 neighbours.
-    Otherwise, the cell dies/remains dead.
+    Different neighbourhoods + rules depending on which step we are at.
+    Steps range from 0 to 3. 
+    See rules + neighbourhood patterns above.
+    
+    Determine the number of neighbours for each cell based on the pattern for the current step. 
+    Then apply the condition of the current step to each value of the array.
     """
 
+    # TODO: write ufunc to handle this
     def calculate_next_state(self, state):
-        num_neighbors = signal.convolve2d(state, self.neighbours, mode='same', boundary='wrap')
-        return cp.logical_or(num_neighbors == 3, cp.logical_and(num_neighbors == 2, state)).astype(cp.uint8)
+        neighbours_pattern = self.neighbours[self.step]
+        num_neighbours = signal.convolve2d(state, neighbours_pattern, mode='same', boundary='wrap')
+        # state = cp.array([self.conditions[self.step](cell_state, neighbours) for cell_state, neighbours in (state, num_neighbours)])
+        
+
+        self.step = 0 if self.step == 3 else self.step + 1
+        return state
