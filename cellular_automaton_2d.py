@@ -21,11 +21,13 @@ from ruleset_mnca import RulesetMultipleNeighbourhoods
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
 # TODO: cleanup the padding, we don't need it anymore
-STATE_WIDTH = 4000
-STATE_HEIGHT = 1500
+STATE_WIDTH = 4000 // 2
+STATE_HEIGHT = 1500 // 2
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 
+
+INIT_MODE = "random"
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
 DISPLAY_INTERVAL = 1000  # How often to visually update the state
@@ -45,8 +47,10 @@ class CellularAutomaton2D:
         self.ca_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create ca width and add padding
         self.ca_state_height = self.ca_height  # No padding added in ca height, so we can see the whole state
 
-        self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
-        self.entropy = cp.zeros((self.ca_state_height, self.ca_state_width))
+        if INIT_MODE == "random":
+            self.state = cp.random.random_integers(0, 1, (self.ca_state_height, self.ca_state_width))
+        else:
+            self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
 
         self.row_padding = num_frames // 2
         self.row_width = self.ca_state_width + self.row_padding * 2
@@ -123,8 +127,9 @@ class CellularAutomaton2D:
         feed_row = self.rule_feed[:1]
         self.state = cp.concatenate((
             cp.zeros((1, self.ca_state_width), cp.uint8),
-            self.state[1:-1],
-            feed_row
+            self.state[1:]
+
+            # feed_row
         ))
 
     # Glue the feed and ca state together and apply the (purely visual) decay function
