@@ -36,7 +36,7 @@ static short int condition_step3(short int state, short int neighbours){
     return  (state == 0 || (78 <= neighbours && neighbours <= 89) || 108 < neighbours) ? 0 : 1;
 }
 
-static void short_int_eval_conditions(char **args, cons npy_intp *dimensions, const npy_intp *steps, void *data){
+static void short_int_eval_condition(char **args, cons npy_intp *dimensions, const npy_intp *steps, void *data){
   npy_intp i;
   npy_intp n = dimensions[0];
   char *in1 = args[0], *in2 = args[1], *in3 = args[2];
@@ -64,7 +64,7 @@ static void short_int_eval_conditions(char **args, cons npy_intp *dimensions, co
 }
 
 /*This a pointer to the above function*/
-PyUFuncGenericFunction funcs[1] = {&short_int_eval_conditions};
+PyUFuncGenericFunction funcs[1] = {&short_int_eval_condition};
 
 /* These are the input and return dtypes of logit.*/
 
