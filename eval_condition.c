@@ -36,7 +36,7 @@ static short int condition_step3(short int state, short int neighbours){
     return  (state == 0 || (78 <= neighbours && neighbours <= 89) || 108 < neighbours) ? 0 : 1;
 }
 
-static void short_int_eval_condition(char **args, cons npy_intp *dimensions, const npy_intp *steps, void *data){
+static void eval_condition(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data){
   npy_intp i;
   npy_intp n = dimensions[0];
   char *in1 = args[0], *in2 = args[1], *in3 = args[2];
@@ -47,14 +47,18 @@ static void short_int_eval_condition(char **args, cons npy_intp *dimensions, con
   short int tmp;
 
   // Which step are we at?
-  if (in3 == 0):
-    out1 = condition_step0(in1, in2);
-  else if (in3 == 1):
-    out1 = condition_step1(in1, in2);
-  else if (in3 == 2):
-    out1 = condition_step2(in1, in2);
-  else:
-    out1 = condition_step3(in1, in2);
+  if (in3 == 0) {
+      out1 = condition_step0(in1, in2);
+  }
+  else if (in3 == 1) {
+      out1 = condition_step1(in1, in2);
+  }
+  else if (in3 == 2) {
+      out1 = condition_step2(in1, in2);
+  }
+  else {
+      out1 = condition_step3(in1, in2);
+  }
 
   in1 += in1_step;
   in2 += in2_step;
@@ -64,10 +68,10 @@ static void short_int_eval_condition(char **args, cons npy_intp *dimensions, con
 }
 
 /*This a pointer to the above function*/
-PyUFuncGenericFunction funcs[1] = {&short_int_eval_condition};
+PyUFuncGenericFunction funcs[1] = {&eval_condition};
 
-/* These are the input and return dtypes of logit.*/
-
+/* These are the input and return dtypes of eval_condition.*/
+// TODO: adjust these
 static char types[4] = {NPY_DOUBLE, NPY_DOUBLE,
                         NPY_DOUBLE, NPY_DOUBLE};
 
@@ -101,7 +105,7 @@ PyMODINIT_FUNC PyInit_npufunc(void)
 
     d = PyModule_GetDict(m);
 
-    PyDict_SetItemString(d, "evalcond", evalcond);
+    PyDict_SetItemString(d, "eval_condition", EvalCondition);
     Py_DECREF(EvalCondition);
 
     return m;
