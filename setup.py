@@ -26,7 +26,7 @@ def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration('npufuncs', parent_package, top_path)
-    config.add_extension('EvalCondition', ['eval_condition.c'])
+    config.add_extension('evalcondition', ['eval_condition.c'])
 
     return config
 

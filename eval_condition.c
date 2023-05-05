@@ -71,7 +71,7 @@ static void eval_condition(char **args, const npy_intp *dimensions, const npy_in
 }
 
 /*This a pointer to the above function*/
-PyUFuncGenericFunction funcs[1] = {&eval_condition};
+PyUFuncGenericFunction funcs[1] = {&evalcondition};
 
 /* These are the input and return dtypes of eval_condition.*/
 // TODO: adjust these
@@ -80,7 +80,7 @@ static char types[5] = {NPY_SHORT, NPY_SHORT, NPY_SHORT,
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        "npufunc",
+        "evalcondition",
         NULL,
         -1,
         EvalConditionMethods,
@@ -90,9 +90,9 @@ static struct PyModuleDef moduledef = {
         NULL
 };
 
-PyMODINIT_FUNC PyInit_npufunc(void)
+PyMODINIT_FUNC PyInit_evalcondition(void)
 {
-    PyObject *m, *eval_condition, *d;
+    PyObject *m, *evalcondition, *d;
 
     import_array();
     import_umath();
@@ -103,12 +103,12 @@ PyMODINIT_FUNC PyInit_npufunc(void)
     }
 
     eval_condition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
-                                    PyUFunc_None, "eval_condition",
+                                    PyUFunc_None, "evalcondition",
                                     "evalcondition_docstring", 0);
 
     d = PyModule_GetDict(m);
 
-    PyDict_SetItemString(d, "eval_condition", eval_condition);
+    PyDict_SetItemString(d, "evalcondition", eval_condition);
     Py_DECREF(eval_condition);
 
     return m;
