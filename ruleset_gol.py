@@ -10,7 +10,7 @@ class RulesetGameOfLife(RulesetInterface):
         super().__init__()
         self.neighbours = cp.array([[1, 1, 1],
                                     [1, 0, 1],
-                                    [1, 1, 1]], dtype=np.uint8)
+                                    [1, 1, 1]], dtype=np.int8)
 
     """
     GOL rules:
@@ -20,4 +20,4 @@ class RulesetGameOfLife(RulesetInterface):
     """
     def calculate_next_state(self, state):
         num_neighbors = signal.convolve2d(state, self.neighbours, mode='same', boundary='wrap')
-        return cp.logical_or(num_neighbors == 3, cp.logical_and(num_neighbors == 2, state)).astype(cp.uint8)
+        return cp.logical_or(num_neighbors == 3, cp.logical_and(num_neighbors == 2, state)).astype(cp.int8)

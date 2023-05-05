@@ -41,7 +41,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-                                        dtype=cp.uint8))
+                                        dtype=cp.int8))
 
         self.neighbours.append(cp.array([[0, 0, 1, 1, 1, 0, 0],
                                          [0, 1, 0, 0, 0, 1, 0],
@@ -50,7 +50,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [1, 0, 1, 1, 1, 0, 1],
                                          [0, 1, 0, 0, 0, 1, 0],
                                          [0, 0, 1, 1, 1, 0, 0]],
-                                        dtype=cp.uint8))
+                                        dtype=cp.int8))
 
         self.neighbours.append(cp.array([[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
@@ -65,7 +65,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
                                          [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0]],
-                                        dtype=cp.uint8))
+                                        dtype=cp.int8))
         
         self.neighbours.append(cp.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -96,7 +96,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-                                        dtype=cp.uint8))
+                                        dtype=cp.int8))
 
         # self.conditions = []
         # Step 0
