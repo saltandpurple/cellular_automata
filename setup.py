@@ -30,7 +30,7 @@ def configuration(parent_package='', top_path=None):
                            parent_package,
                            top_path)
     config.add_extension('npufunc',
-                         ['npufunc/eval_condition.c'],
+                         ['eval_condition.c'],
                          extra_info=info)
 
     return config
