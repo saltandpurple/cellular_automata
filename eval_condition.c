@@ -39,7 +39,7 @@ static short condition_step3(short state, short neighbours){
 // in1: state of the cell
 // in2: number of neighbours
 // in3: current condition step
-static void eval_condition(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data){
+static void evalcondition(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data){
   npy_intp i;
   npy_intp n = dimensions[0];
   char *in1 = args[0], *in2 = args[1], *in3 = args[2];
@@ -73,7 +73,7 @@ static void eval_condition(char **args, const npy_intp *dimensions, const npy_in
 /*This a pointer to the above function*/
 PyUFuncGenericFunction funcs[1] = {&evalcondition};
 
-/* These are the input and return dtypes of eval_condition.*/
+/* These are the input and return dtypes of evalcondition.*/
 // TODO: adjust these
 static char types[5] = {NPY_SHORT, NPY_SHORT, NPY_SHORT,
                         NPY_SHORT, NPY_SHORT};
@@ -108,8 +108,8 @@ PyMODINIT_FUNC PyInit_evalcondition(void)
 
     d = PyModule_GetDict(m);
 
-    PyDict_SetItemString(d, "evalcondition", eval_condition);
-    Py_DECREF(eval_condition);
+    PyDict_SetItemString(d, "evalcondition", evalcondition);
+    Py_DECREF(evalcondition);
 
     return m;
 }
