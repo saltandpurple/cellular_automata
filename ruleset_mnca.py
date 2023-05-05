@@ -1,4 +1,5 @@
 import cupy as cp
+import numpy as np
 from ruleset_interface import RulesetInterface
 from cupyx.scipy import signal
 from npufuncs import evalcondition
@@ -41,7 +42,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-                                        dtype=cp.int8))
+                                        dtype=np.int8))
 
         self.neighbours.append(cp.array([[0, 0, 1, 1, 1, 0, 0],
                                          [0, 1, 0, 0, 0, 1, 0],
@@ -50,7 +51,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [1, 0, 1, 1, 1, 0, 1],
                                          [0, 1, 0, 0, 0, 1, 0],
                                          [0, 0, 1, 1, 1, 0, 0]],
-                                        dtype=cp.int8))
+                                        dtype=np.int8))
 
         self.neighbours.append(cp.array([[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
@@ -65,7 +66,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
                                          [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0]],
-                                        dtype=cp.int8))
+                                        dtype=np.int8))
         
         self.neighbours.append(cp.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -96,7 +97,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-                                        dtype=cp.int8))
+                                        dtype=np.int8))
 
         # self.conditions = []
         # Step 0
@@ -130,6 +131,6 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     def calculate_next_state(self, state):
         num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
 
-        state = evalcondition.evalcondition(state.astype(cp.int8), num_neighbours.astype(cp.int8), self.step)
+        evalcondition.evalcondition(state.astype(np.int8), num_neighbours.astype(np.int8), self.step, out=state)
         self.step = 0 if self.step == 3 else self.step + 1
         return state
