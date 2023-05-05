@@ -4,4 +4,3 @@ __pycache__/
 videos/
 /.idea/
 /cmake-build-debug/
-/build/
