@@ -40,32 +40,33 @@ static char condition_step3(char state, char neighbours){
 // in2: number of neighbours
 // in3: current condition step
 static void evalcondition(char **args, const npy_intp *dimensions, const npy_intp *steps, void *data){
-//  npy_intp i;
-//  npy_intp n = dimensions[0];
+  npy_intp i;
+  npy_intp n = dimensions[0];
   char *in1 = args[0], *in2 = args[1], *in3 = args[2];
   char *out1 = args[3];
   npy_intp in1_step = steps[0], in2_step = steps[1], in3_step = steps[2];
   npy_intp out1_step = steps[3];
 
-
-  // Which step are we at?
-  if (*in3 == 0) {
-      *out1 = condition_step0(*in1, *in2);
+  for (i = 0; i < n; i++){
+    // Which step are we at?
+    if (*in3 == 0) {
+        *out1 = condition_step0(*in1, *in2);
+    }
+    else if (*in3 == 1) {
+        *out1 = condition_step1(*in1, *in2);
+    }
+    else if (*in3 == 2) {
+        *out1 = condition_step2(*in1, *in2);
+    }
+    else {
+       *out1 = condition_step3(*in1, *in2);
+    }
+    //   Move the pointers to the next array element
+    in1 += in1_step;
+    in2 += in2_step;
+//    in3 += in3_step;
+    out1 += out1_step;
   }
-  else if (*in3 == 1) {
-      *out1 = condition_step1(*in1, *in2);
-  }
-  else if (*in3 == 2) {
-      *out1 = condition_step2(*in1, *in2);
-  }
-  else {
-     *out1 = condition_step3(*in1, *in2);
-  }
-  //   Move the pointers to the next array element
-//  in1 += in1_step;
-//  in2 += in2_step;
-//  in3 += in3_step;
-//  out1 += out1_step;
 }
 
 /*This a pointer to the above function*/
