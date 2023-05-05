@@ -20,18 +20,13 @@ See the distutils section of
 at docs.python.org  and the documentation
 on numpy.distutils for more information.
 """
+
+
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration, get_info
 
-    # Necessary for the half-float d-type.
-    info = get_info('npymath')
-
-    config = Configuration('npufunc',
-                           parent_package,
-                           top_path)
-    config.add_extension('npufunc',
-                         ['eval_condition.c'],
-                         extra_info=info)
+    config = Configuration('npufunc', parent_package, top_path)
+    config.add_extension('npufunc', ['eval_condition.c'])
 
     return config
 
