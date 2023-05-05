@@ -62,13 +62,10 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
      *out1 = condition_step3(*in1, *in2);
   }
   //   Move the pointers to the next array element
-  in1++;
-  in2++;
-  out1++;
-//  in1 += in1_step;
-//  in2 += in2_step;
+  in1 += in1_step;
+  in2 += in2_step;
 //  in3 += in3_step;
-//  out1 += out1_step;
+  out1 += out1_step;
 }
 
 /*This a pointer to the above function*/
