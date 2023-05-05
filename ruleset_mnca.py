@@ -1,7 +1,7 @@
 import cupy as cp
 from ruleset_interface import RulesetInterface
 from cupyx.scipy import signal
-from npufuncs import EvalCondition
+from npufuncs import evalcondition
 
 class RulesetMultipleNeighbourhoods(RulesetInterface):
 
@@ -138,6 +138,6 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     def calculate_next_state(self, state):
         num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
 
-        state = npufunc.eval_condition()
+        state = evalcondition.eval_condition(state, num_neighbours, self.step)
         self.step = 0 if self.step == 3 else self.step + 1
         return state
