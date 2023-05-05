@@ -64,7 +64,7 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
 
   in1 += in1_step;
   in2 += in2_step;
-  in3 += in3_step;
+//  in3 += in3_step;
   out1 += out1_step;
 }
 
