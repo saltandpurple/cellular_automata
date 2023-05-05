@@ -43,9 +43,9 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
   npy_intp i;
   npy_intp n = dimensions[0];
   char *in1 = args[0], *in2 = args[1], *in3 = args[2];
-  char *out1 = args[3], *out2 = args[4];
+  char *out1 = args[3];
   npy_intp in1_step = steps[0], in2_step = steps[1], in3_step = steps[2];
-  npy_intp out1_step = steps[3], out2_step = steps[4];
+  npy_intp out1_step = steps[3];
 
   short tmp;
 
@@ -67,7 +67,6 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
   in2 += in2_step;
   in3 += in3_step;
   out1 += out1_step;
-  out2 += out2_step;
 }
 
 /*This a pointer to the above function*/
@@ -75,8 +74,7 @@ PyUFuncGenericFunction funcs[1] = {&evalcondition};
 
 /* These are the input and return dtypes of evalcondition.*/
 // TODO: adjust these
-static char types[5] = {NPY_SHORT, NPY_SHORT, NPY_SHORT,
-                        NPY_SHORT, NPY_SHORT};
+static char types[5] = {NPY_SHORT, NPY_SHORT, NPY_SHORT, NPY_SHORT};
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
@@ -102,7 +100,7 @@ PyMODINIT_FUNC PyInit_evalcondition(void)
         return NULL;
     }
 
-    evalcondition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
+    evalcondition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 3, 1,
                                     PyUFunc_None, "evalcondition",
                                     "evalcondition_docstring", 0);
 
