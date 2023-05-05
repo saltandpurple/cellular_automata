@@ -50,16 +50,16 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
 
   // Which step are we at?
   if (*in3 == 0) {
-      out1 = condition_step0(*in1, *in2);
+      *out1 = condition_step0(*in1, *in2);
   }
   else if (in3 == 1) {
-      out1 = condition_step1(*in1, *in2);
+      *out1 = condition_step1(*in1, *in2);
   }
   else if (in3 == 2) {
-      out1 = condition_step2(*in1, *in2);
+      *out1 = condition_step2(*in1, *in2);
   }
   else {
-     out1 = condition_step3(*in1, *in2);
+     *out1 = condition_step3(*in1, *in2);
   }
 
   in1 += in1_step;
