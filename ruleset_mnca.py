@@ -129,7 +129,8 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     Then apply the condition of the current step to each value of the array.
     """
     def calculate_next_state(self, state):
-        num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
+        # num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
+        num_neighbours = signal.convolve2d(state, self.neighbours[0], mode='same')
 
         evalcondition.evalcondition(state.astype(np.int8), num_neighbours.astype(np.int8), self.step, out=state)
         self.step = 0 if self.step == 3 else self.step + 1
