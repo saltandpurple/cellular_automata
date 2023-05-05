@@ -100,8 +100,8 @@ PyMODINIT_FUNC PyInit_npufunc(void)
     }
 
     EvalCondition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
-                                    PyUFunc_None, "evalcond",
-                                    "evalcond_docstring", 0);
+                                    PyUFunc_None, "eval_condition",
+                                    "evalcondition_docstring", 0);
 
     d = PyModule_GetDict(m);
 

@@ -36,7 +36,7 @@ RULE = 30  # `RULE` specifies which cellular automaton rule to use.
 X_OFFSET = 0  # `X_OFFSET` specifies how far from the center to place the initial first pixel.
 
 
-class CellularAutomaton2D:
+class CellularAutomaton:
     def __init__(self, width, height,
                  ca_percentage=GOL_PERCENTAGE,
                  num_frames=MAX_STEPS):
@@ -157,17 +157,17 @@ class CellularAutomaton2D:
 
 def main():
     # writer = video_writer.Writer(fps=FPS, high_quality=HIGH_QUALITY)
-    animation = CellularAutomaton2D(STATE_WIDTH, STATE_HEIGHT)
+    animation = CellularAutomaton(STATE_WIDTH, STATE_HEIGHT)
     cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
 
     # Step through the animation and display the current state every DISPLAY_INTERVAL steps
     for step in tqdm.trange(MAX_STEPS):
         if step % DISPLAY_INTERVAL == 0:
-            CellularAutomaton2D.display_state(animation, 1)
+            CellularAutomaton.display_state(animation, 1)
         animation.step()
 
     # Display the final state until key pressed
-    CellularAutomaton2D.display_state(animation, 0)
+    CellularAutomaton.display_state(animation, 0)
 
 
 if __name__ == '__main__':

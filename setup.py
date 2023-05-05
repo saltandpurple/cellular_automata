@@ -31,11 +31,11 @@ def configuration(parent_package='', top_path=None):
     #Necessary for the half-float d-type.
     info = get_info('npymath')
 
-    config = Configuration('npufunc_directory',
+    config = Configuration('npufuncs',
                            parent_package,
                            top_path)
     config.add_extension('npufunc',
-                         ['eval_condition.c'],
+                         ['npufuncs/eval_condition.c'],
                          extra_info=info)
 
     return config
