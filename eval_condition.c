@@ -109,7 +109,7 @@ PyMODINIT_FUNC PyInit_npufunc(void)
     d = PyModule_GetDict(m);
 
     PyDict_SetItemString(d, "eval_condition", eval_condition);
-    Py_DECREF(EvalCondition);
+    Py_DECREF(eval_condition);
 
     return m;
 }
