@@ -130,6 +130,6 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     def calculate_next_state(self, state):
         num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
 
-        evalcondition.evalcondition(num_neighbours.astype(cp.int8), num_neighbours.astype(cp.int8), cp.int8(self.step))
+        evalcondition.evalcondition(state, state, cp.int8(self.step))
         self.step = 0 if self.step == 3 else self.step + 1
         return state
