@@ -92,7 +92,7 @@ static struct PyModuleDef moduledef = {
 
 PyMODINIT_FUNC PyInit_npufunc(void)
 {
-    PyObject *m, *EvalCondition, *d;
+    PyObject *m, *eval_condition, *d;
 
     import_array();
     import_umath();
@@ -102,13 +102,13 @@ PyMODINIT_FUNC PyInit_npufunc(void)
         return NULL;
     }
 
-    EvalCondition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
+    eval_condition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
                                     PyUFunc_None, "eval_condition",
                                     "evalcondition_docstring", 0);
 
     d = PyModule_GetDict(m);
 
-    PyDict_SetItemString(d, "eval_condition", EvalCondition);
+    PyDict_SetItemString(d, "eval_condition", eval_condition);
     Py_DECREF(EvalCondition);
 
     return m;
