@@ -1,0 +1,6 @@
+eval_condition.c
+setup.py
+npufunc_directory.egg-info/PKG-INFO
+npufunc_directory.egg-info/SOURCES.txt
+npufunc_directory.egg-info/dependency_links.txt
+npufunc_directory.egg-info/top_level.txt
