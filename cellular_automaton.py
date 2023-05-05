@@ -150,7 +150,8 @@ class CellularAutomaton:
     @staticmethod
     def display_state(animation, duration):
         # We need to convert BGR to OpenCVs RGB
-        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
+        # state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
+        state_in_rgb = cp.asnumpy(animation.bgr)
         cv2.imshow("CA", state_in_rgb)
         cv2.waitKey(duration)
 
