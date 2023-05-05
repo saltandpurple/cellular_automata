@@ -21,7 +21,7 @@ at docs.python.org  and the documentation
 on numpy.distutils for more information.
 """
 def configuration(parent_package='', top_path=None):
-    from cupy.distutils.misc_util import Configuration, get_info
+    from numpy.distutils.misc_util import Configuration, get_info
 
     # Necessary for the half-float d-type.
     info = get_info('npymath')
@@ -37,6 +37,6 @@ def configuration(parent_package='', top_path=None):
 
 
 if __name__ == "__main__":
-    from cupy.distutils.core import setup
+    from numpy.distutils.core import setup
 
     setup(configuration=configuration)
