@@ -102,7 +102,7 @@ PyMODINIT_FUNC PyInit_evalcondition(void)
         return NULL;
     }
 
-    eval_condition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
+    evalcondition = PyUFunc_FromFuncAndData(funcs, NULL, types, 1, 2, 2,
                                     PyUFunc_None, "evalcondition",
                                     "evalcondition_docstring", 0);
 
