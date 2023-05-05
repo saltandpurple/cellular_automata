@@ -102,30 +102,22 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
         # Step 0
         # If the cell has between 0 and 17 neighbours, it dies.
         # If the cell has between 40 and 42 neighbours, it lives/spawns.
-        # self.conditions.append(lambda state, num_neighbours: cp.where((cp.greater_equal(num_neighbours, 0) & cp.less_equal(num_neighbours, 17)), 0,
-        #                                                               cp.where((cp.greater_equal(num_neighbours, 40) & cp.less_equal(num_neighbours, 42)), 1, state
-        #                                                                        )))
-        # self.conditions.append(lambda cell_state, neighbours: cp.logical_and(cp.logical_not(0 >= neighbours <= 17), cp.logical_or(40 >= neighbours <= 42, cell_state)).astype(cp.uint8))
         # self.conditions.append(lambda cell_state, neighbours: 0 if (0 >= neighbours <= 17) else 1 if (40 <= neighbours <= 42) else cell_state)
 
         # Step 1
         # If the cell has between 10 and 13 neighbours, it lives/spawns.
-        # self.conditions.append(lambda state, num_neighbours: cp.where(()))
-        # self.conditions.append(lambda cell_state, neighbours: cp.logical_or(10 >= neighbours <= 13, cell_state).astype(cp.uint8))
         # self.conditions.append(lambda cell_state, neighbours: 1 if (10 <= neighbours <= 13) else cell_state)
 
         # Step 2
         # If the cell has between 9 and 21 neighbours, it dies.
-        # self.conditions.append(lambda cell_state, neighbours: cp.logical_and(cp.logical_not(9 >= neighbours <= 21), cell_state).astype(cp.uint8))
         # self.conditions.append(lambda cell_state, neighbours: 0 if (9 <= neighbours <= 21) else cell_state)
 
         # Step 3
         # If the cell has between 78 and 89 neighbours, it dies.
         # If the cell has more than 108 neighbours, it dies.
-        # self.conditions.append(lambda cell_state, neighbours: cp.logical_and(cp.logical_not(78 >= neighbours <= 89 or 108 <= neighbours), cell_state).astype(cp.uint8))
         # self.conditions.append(lambda cell_state, neighbours: 0 if (78 <= neighbours <= 89 or 108 <= neighbours) else cell_state)
 
-
+ # TODO: write rules in the docstring
     """
     Multiple Neighbourhoods rules:
     Different neighbourhoods + rules depending on which step we are at.
