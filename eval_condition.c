@@ -13,26 +13,26 @@ static PyMethodDef EvalConditionMethods[] = {
 // Step 0
 // If the cell has between 0 and 17 neighbours, it dies.
 // If the cell has between 40 and 42 neighbours, it lives/spawns.
-static short condition_step0(short state, short neighbours){
+static short condition_step0(char state, char neighbours){
     return ((state == 1 && !(0 <= neighbours && neighbours <= 17)) || (40 <= neighbours && neighbours <= 42)) ? 1 : 0;
 }
 
 // Step 1
 // If the cell has between 10 and 13 neighbours, it lives/spawns.
-static short condition_step1(short state, short neighbours){
+static char condition_step1(char state, char neighbours){
     return (state == 1 || (10 <= neighbours && neighbours <= 13)) ? 1 : 0;
 }
 
 // Step 2
 // If the cell has between 9 and 21 neighbours, it dies.
-static short condition_step2(short state, short neighbours){
+static char condition_step2(char state, char neighbours){
     return (state == 0 || (9 <= neighbours && neighbours <= 21)) ? 0 : 1;
 }
 
 // Step 3
 // If the cell has between 78 and 89 neighbours, it dies.
 // If the cell has more than 108 neighbours, it dies.
-static short condition_step3(short state, short neighbours){
+static char condition_step3(char state, char neighbours){
     return  (state == 0 || (78 <= neighbours && neighbours <= 89) || 108 < neighbours) ? 0 : 1;
 }
 
@@ -47,20 +47,19 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
   npy_intp in1_step = steps[0], in2_step = steps[1], in3_step = steps[2];
   npy_intp out1_step = steps[3];
 
-  short in3_short = *(short *)in3;
 
   // Which step are we at?
-  if (in3_short == 0) {
-      *(short *) out1 = condition_step0(*(short *)in1, *(short *)in2);
+  if (*in3 == 0) {
+      out1 = condition_step0(*in1, *in2);
   }
-  else if (in3_short == 1) {
-      *(short *)out1 = condition_step1(*(short *)in1, *(short *)in2);
+  else if (in3 == 1) {
+      out1 = condition_step1(*in1, *in2);
   }
-  else if (in3_short == 2) {
-      *(short *)out1 = condition_step2(*(short *)in1, *(short *)in2);
+  else if (in3 == 2) {
+      out1 = condition_step2(*in1, *in2);
   }
   else {
-      *(short *)out1 = condition_step3(*(short *)in1, *(short *)in2);
+     out1 = condition_step3(*in1, *in2);
   }
 
   in1 += in1_step;
@@ -74,7 +73,7 @@ PyUFuncGenericFunction funcs[1] = {&evalcondition};
 
 /* These are the input and return dtypes of evalcondition.*/
 // TODO: adjust these
-static char types[5] = {NPY_SHORT, NPY_SHORT, NPY_SHORT, NPY_SHORT};
+static char types[4] = {NPY_BYTE, NPY_BYTE, NPY_BYTE, NPY_BYTE};
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
