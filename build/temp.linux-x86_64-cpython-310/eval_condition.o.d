@@ -117,3 +117,4 @@ build/temp.linux-x86_64-cpython-310/eval_condition.o: eval_condition.c \
  /home/saltandpurple/.pyenv/versions/ca/lib/python3.10/site-packages/numpy/core/include/numpy/npy_interrupt.h \
  /home/saltandpurple/.pyenv/versions/ca/lib/python3.10/site-packages/numpy/core/include/numpy/__ufunc_api.h \
  /home/saltandpurple/.pyenv/versions/ca/lib/python3.10/site-packages/numpy/core/include/numpy/halffloat.h
+commandline: -I/home/saltandpurple/.pyenv/versions/ca/lib/python3.10/site-packages/numpy/core/include -Ibuild/src.linux-x86_64-3.10/numpy/distutils/include -I/home/saltandpurple/.pyenv/versions/ca/include -I/home/saltandpurple/.pyenv/versions/3.10.10/include/python3.10 -c-msse -msse2 -msse3-I/home/saltandpurple/.pyenv/versions/ca/lib/python3.10/site-packages/numpy/core/include -Ibuild/src.linux-x86_64-3.10/numpy/distutils/include -I/home/saltandpurple/.pyenv/versions/ca/include -I/home/saltandpurple/.pyenv/versions/3.10.10/include/python3.10
