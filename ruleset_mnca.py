@@ -1,8 +1,7 @@
 import cupy as cp
 from ruleset_interface import RulesetInterface
 from cupyx.scipy import signal
-import npufunc
-
+from npufuncs import EvalCondition
 
 class RulesetMultipleNeighbourhoods(RulesetInterface):
 
