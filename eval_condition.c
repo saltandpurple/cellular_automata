@@ -47,17 +47,16 @@ static void evalcondition(char **args, const npy_intp *dimensions, const npy_int
   npy_intp in1_step = steps[0], in2_step = steps[1], in3_step = steps[2];
   npy_intp out1_step = steps[3];
 
-  short tmp;
-
+  short in3_short = *(short *)in3;
 
   // Which step are we at?
-  if (in3 == 0) {
+  if (in3_short == 0) {
       *(short *) out1 = condition_step0(*(short *)in1, *(short *)in2);
   }
-  else if (in3 == 1) {
+  else if (in3_short == 1) {
       *(short *)out1 = condition_step1(*(short *)in1, *(short *)in2);
   }
-  else if (in3 == 2) {
+  else if (in3_short == 2) {
       *(short *)out1 = condition_step2(*(short *)in1, *(short *)in2);
   }
   else {
