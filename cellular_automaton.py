@@ -27,10 +27,10 @@ GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 
 
-INIT_MODE = "random"
+INIT_MODE = "empty"
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
-DISPLAY_INTERVAL = 1000  # How often to visually update the state
+DISPLAY_INTERVAL = 100  # How often to visually update the state
 
 RULE = 30  # `RULE` specifies which cellular automaton rule to use.
 X_OFFSET = 0  # `X_OFFSET` specifies how far from the center to place the initial first pixel.
@@ -48,22 +48,22 @@ class CellularAutomaton:
         self.ca_state_height = self.ca_height  # No padding added in ca height, so we can see the whole state
 
         if INIT_MODE == "random":
-            self.state = cp.random.random_integers(0, 1, (self.ca_state_height, self.ca_state_width))
+            self.state = cp.random.random_integers(0, 1, (self.ca_state_height, self.ca_state_width)).astype(cp.uint8)
         else:
-            self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.int8)
+            self.state = cp.zeros((self.ca_state_height, self.ca_state_width), cp.uint8)
 
         self.row_padding = num_frames // 2
         self.row_width = self.ca_state_width + self.row_padding * 2
-        self.row = cp.zeros(self.row_width, np.int8)
+        self.row = cp.zeros(self.row_width, np.uint8)
         self.row[self.row_width // 2 + X_OFFSET] = 1
 
         self.rule_feed_height = self.height - self.ca_height
         self.rule_feed = cp.concatenate((
-            cp.zeros((self.rule_feed_height - 1, self.ca_state_width), np.int8),
+            cp.zeros((self.rule_feed_height - 1, self.ca_state_width), np.uint8),
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
-        self.row_neighbors = cp.array([1, 2, 4], dtype=np.int8)
+        self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
 
         # Choose your ruleset here
         self.ruleset = RulesetMultipleNeighbourhoods()
@@ -89,7 +89,7 @@ class CellularAutomaton:
         rgb_list = [c.rgb for c in color_list]
 
         # this must be done with numpy, if display output is to be shown
-        self.colors = (cp.array(rgb_list, float) * 255).astype(np.int8)
+        self.colors = (cp.array(rgb_list, float) * 255).astype(np.uint8)
         self.decay = cp.full((self.height, self.width), len(self.colors) - 1, int)
         self.bgr = None
 
@@ -103,7 +103,7 @@ class CellularAutomaton:
         self.update_rgb()
 
     def update_rule_kernel(self):
-        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.int8)
+        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
 
     # Generate another rule feed row and add it to its bottom. Remove the first one.
     def update_rule_feed(self):
@@ -127,9 +127,8 @@ class CellularAutomaton:
         feed_row = self.rule_feed[:1]
         self.state = cp.concatenate((
             cp.zeros((1, self.ca_state_width), cp.uint8),
-            self.state[1:]
-
-            # feed_row
+            self.state[1:-1],
+            feed_row
         ))
 
     # Glue the feed and ca state together and apply the (purely visual) decay function
@@ -139,9 +138,12 @@ class CellularAutomaton:
              self.rule_feed[:, GOL_STATE_WIDTH_PADDING:-GOL_STATE_WIDTH_PADDING]),
             axis=0)
 
-        self.decay += 1
-        self.decay = cp.clip(self.decay, None, len(self.colors) - 1)
-        self.decay *= 1 - visible_state
+        self.decay = visible_state
+
+        # TODO: rework this to be a) configurable and b) working with MNCAs
+        # self.decay += 1
+        # self.decay = cp.clip(self.decay, None, len(self.colors) - 1)
+        # self.decay *= 1 - visible_state
 
     def update_rgb(self):
         self.bgr = self.colors[self.decay]
@@ -150,8 +152,8 @@ class CellularAutomaton:
     @staticmethod
     def display_state(animation, duration):
         # We need to convert BGR to OpenCVs RGB # TODO: rework this/check this
-        # state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
-        state_in_rgb = cp.asnumpy(animation.bgr)
+        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
+        # state_in_rgb = cp.asnumpy(animation.bgr)
         cv2.imshow("CA", state_in_rgb)
         cv2.waitKey(duration)
 
