@@ -50,20 +50,20 @@ class CellularAutomaton:
         if INIT_MODE == "random":
             self.state = cp.random.random_integers(0, 1, (self.ca_state_height, self.ca_state_width))
         else:
-            self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.int8)
+            self.state = cp.zeros((self.ca_state_height, self.ca_state_width), np.uint8)
 
         self.row_padding = num_frames // 2
         self.row_width = self.ca_state_width + self.row_padding * 2
-        self.row = cp.zeros(self.row_width, np.int8)
+        self.row = cp.zeros(self.row_width, np.uint8)
         self.row[self.row_width // 2 + X_OFFSET] = 1
 
         self.rule_feed_height = self.height - self.ca_height
         self.rule_feed = cp.concatenate((
-            cp.zeros((self.rule_feed_height - 1, self.ca_state_width), np.int8),
+            cp.zeros((self.rule_feed_height - 1, self.ca_state_width), np.uint8),
             self.row[None, self.row_padding:-self.row_padding]
         ))
 
-        self.row_neighbors = cp.array([1, 2, 4], dtype=np.int8)
+        self.row_neighbors = cp.array([1, 2, 4], dtype=np.uint8)
 
         # Choose your ruleset here
         self.ruleset = RulesetMultipleNeighbourhoods()
@@ -89,7 +89,7 @@ class CellularAutomaton:
         rgb_list = [c.rgb for c in color_list]
 
         # this must be done with numpy, if display output is to be shown
-        self.colors = (cp.array(rgb_list, float) * 255).astype(np.int8)
+        self.colors = (cp.array(rgb_list, float) * 255).astype(np.uint8)
         self.decay = cp.full((self.height, self.width), len(self.colors) - 1, int)
         self.bgr = None
 
@@ -103,7 +103,7 @@ class CellularAutomaton:
         self.update_rgb()
 
     def update_rule_kernel(self):
-        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.int8)
+        self.rule_kernel = cp.array([int(x) for x in f'{self.rule:08b}'[::-1]], np.uint8)
 
     # Generate another rule feed row and add it to its bottom. Remove the first one.
     def update_rule_feed(self):
@@ -150,8 +150,8 @@ class CellularAutomaton:
     @staticmethod
     def display_state(animation, duration):
         # We need to convert BGR to OpenCVs RGB # TODO: rework this/check this
-        # state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
-        state_in_rgb = cp.asnumpy(animation.bgr)
+        state_in_rgb = cv2.cvtColor(cp.asnumpy(animation.bgr), cv2.COLOR_BGR2RGB)
+        # state_in_rgb = cp.asnumpy(animation.bgr)
         cv2.imshow("CA", state_in_rgb)
         cv2.waitKey(duration)
 

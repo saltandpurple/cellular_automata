@@ -2,7 +2,7 @@ import numpy as np
 import cupy as cp
 from ruleset_interface import RulesetInterface
 from cupyx.scipy import signal
-from npufuncs import evalcondition
+# from npufuncs import evalcondition
 
 
 class RulesetMultipleNeighbourhoods(RulesetInterface):
@@ -100,6 +100,26 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
                                         dtype=cp.int8))
 
+        self.condition_kernel = cp.ElementwiseKernel(
+            'int8 state, int8 num_neighbours, raw int8 step',
+            'int8 new_state',
+            r'''
+            if (step == 0){
+                new_state = ((state == 1 && !(0 <= num_neighbours && num_neighbours <= 17)) || (40 <= num_neighbours && num_neighbours <= 42)) ? 1 : 0;
+            }
+            else if (step == 1){
+                new_state = (state == 1 || (10 <= num_neighbours && num_neighbours <= 13)) ? 1 : 0;
+            }
+            else if ( step == 2){
+                new_state = (state == 0 || (9 <= num_neighbours && num_neighbours <= 21)) ? 0 : 1;
+            }
+            else {
+                new_state = (state == 0 || (78 <= num_neighbours && num_neighbours <= 89) || 108 < num_neighbours) ? 0 : 1;
+            }
+            ''',
+            'evaluate_condition'
+        )
+
         # self.conditions = []
         # Step 0
         # If the cell has between 0 and 17 neighbours, it dies.
@@ -119,7 +139,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
         # If the cell has more than 108 neighbours, it dies.
         # self.conditions.append(lambda cell_state, neighbours: 0 if (78 <= neighbours <= 89 or 108 <= neighbours) else cell_state)
 
- # TODO: write rules in the docstring
+     # TODO: write rules in the docstring
     """
     Multiple Neighbourhoods rules:
     Different neighbourhoods + rules depending on which step we are at.
@@ -131,7 +151,9 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     """
     def calculate_next_state(self, state):
         num_neighbours = signal.fftconvolve(state, self.neighbours[0], mode='same')
-        # TODO: rewrite this so it is executed on the gpu
-        evalcondition.evalcondition(state.astype(cp.int8), num_neighbours.astype(cp.int8), cp.int8(self.step))
+        # evalcondition.evalcondition(state.astype(cp.int8), num_neighbours.astype(cp.int8), cp.int8(self.step))
+        state = self.condition_kernel(state.astype(cp.int8), num_neighbours.astype(cp.int8), cp.int8(self.step))
         self.step = 0 if self.step == 3 else self.step + 1
         return state
+
+
