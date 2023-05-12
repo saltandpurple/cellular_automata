@@ -103,40 +103,41 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
         self.apply_rules_kernel = cp.RawKernel(
             r'''
             __global__
-            void apply_rules(int n, int8 state, int8 num_neighbours, int8 new_state){
-                int index = threadIdx.x;
-                int stride = blockDim.x;
+            void apply_rules(int n, int8 *state, int8 *num_neighbours){
+                int index = blockIdx.x * blockDim.x + threadIdx.x;
+                int stride = blockDim.x * gridDim.x;
                 
-                for (int i = index; i < n; i += stride){
+                for (int idx = index; idx < n; idx += stride){
                     
                     // If no conditions are met, retain old state
-                    new_state = state;
                     
+                    // Neighbourhood 0
                     // If the cell has between 0 and 17 neighbours, it dies.
                     // If the cell has between 40 and 42 neighbours, it lives/spawns.
-                    if (0 <= num_neighbours && num_neighbours <= 170){
-                        new_state = 0;
+                    if (0 <= num_neighbours[idx] && num_neighbours[idx] <= 170){
+                        state[idx] = 0;
                     }
-                    else if (40 <= num_neighbours && num_neighbours <= 42){
-                        new_state = 1;
+                    else if (40 <= num_neighbours[idx] && num_neighbours[idx] <= 42){
+                        state[idx] = 1;
                     }
          
+                    // Neighbourhood 1
                     // If the cell has between 10 and 13 neighbours, it lives/spawns.
-                    if (step == 1){
-                        new_state = (state == 1 || (10 <= num_neighbours && num_neighbours <= 13) ) ? 1 : 0;
+                    if (10 <= num_neighbours[idx] && num_neighbours[idx] <= 13){
+                        state[idx] = 1;
                     }
          
-                    // Step 2
+                    // Neighbourhood 2
                     // If the cell has between 9 and 21 neighbours, it dies.
-                    else if ( step == 2){
-                        new_state = (state == 0 || (9 <= num_neighbours && num_neighbours <= 21) ) ? 0 : 1;
+                    if (9 <= num_neighbours[idx] && num_neighbours[idx] <= 21){
+                        state[idx] = 0;
                     }
                     
-                    // Step 3
+                    // Neighbourhood 3
                     // If the cell has between 78 and 89 neighbours, it dies.
                     // If the cell has more than 108 neighbours, it dies.            
-                    else {
-                        new_state = (state == 0 || (78 <= num_neighbours && num_neighbours <= 89) || 108 < num_neighbours) ? 0 : 1;
+                    if ((78 <= num_neighbours[idx] && num_neighbours[idx] <= 89) || 108 < num_neighbours[idx]) {
+                        state[idx] = 0;
                     }
                 }
             }

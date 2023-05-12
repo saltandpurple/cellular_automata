@@ -26,7 +26,7 @@ STATE_HEIGHT = 1500 // 2
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 
-
+# TODO: adjust the params to the new implementation style (switch between rulesets, enable/disable rulefeed etc)
 INIT_MODE = "empty"
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
