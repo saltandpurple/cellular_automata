@@ -28,12 +28,23 @@ GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 
 # TODO: adjust the params to the new implementation style (switch between rulesets, enable/disable rulefeed etc)
 INIT_MODE = "random"
+SPAWN_PROBABILITY = 1 / 4  # TODO: convert this into random generation below
+
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
-DISPLAY_INTERVAL = 100  # How often to visually update the state (in steps)
+DISPLAY_INTERVAL = 1  # How often to visually update the state (in steps)
 
 RULE = 30  # `RULE` specifies which cellular automaton rule to use.
 X_OFFSET = 0  # `X_OFFSET` specifies how far from the center to place the initial first pixel.
+
+COLOR_SCHEME = [
+    '#711c91',
+    '#ea00d9',
+    '#0abdc6',
+    '#133e7c',
+    '#091833',
+    '#000103'
+]
 
 
 class CellularAutomaton:
@@ -47,8 +58,9 @@ class CellularAutomaton:
         self.ca_state_width = self.width + GOL_STATE_WIDTH_PADDING * 2  # Create ca width and add padding
         self.ca_state_height = self.ca_height  # No padding added in ca height, so we can see the whole state
 
+        # Initialize to random state with given probability, if mode == random - otherwise initialize to empty
         if INIT_MODE == "random":
-            self.state = cp.random.random_integers(0, 1, (self.ca_state_height, self.ca_state_width)).astype(cp.uint8)
+            self.state = cp.random.random_integers(-2, 1, (self.ca_state_height, self.ca_state_width)).clip(0,1).astype(cp.uint8)
         else:
             self.state = cp.zeros((self.ca_state_height, self.ca_state_width), cp.uint8)
 
@@ -71,20 +83,12 @@ class CellularAutomaton:
         self.rule_kernel = None
         self.update_rule_kernel()
 
-        hex_colors = [
-            '#711c91',
-            '#ea00d9',
-            '#0abdc6',
-            '#133e7c',
-            '#091833',
-            '#000103'
-        ]
-        color_decay_times = [2 * 8 ** i for i in range(len(hex_colors) - 1)]
-        assert len(hex_colors) == len(color_decay_times) + 1
+        color_decay_times = [2 * 8 ** i for i in range(len(COLOR_SCHEME) - 1)]
+        assert len(COLOR_SCHEME) == len(color_decay_times) + 1
         color_list = [colour.Color('white')]
-        for i in range(len(hex_colors) - 1):
-            color_list += list(colour.Color(hex_colors[i]).
-                               range_to(colour.Color(hex_colors[i + 1]), color_decay_times[i]))
+        for i in range(len(COLOR_SCHEME) - 1):
+            color_list += list(colour.Color(COLOR_SCHEME[i]).
+                               range_to(colour.Color(COLOR_SCHEME[i + 1]), color_decay_times[i]))
         color_list += [colour.Color('black')]
         rgb_list = [c.rgb for c in color_list]
 
