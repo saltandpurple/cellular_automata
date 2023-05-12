@@ -100,55 +100,47 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
 
         self.apply_rules_kernel = cp.RawKernel(
             r'''
-            __global__
-            void apply_rules(short *state, short *num_neighbours){
+            extern "C" __global__
+            void apply_rules(unsigned char* state, const unsigned char* num_neighbours_0, const unsigned char* num_neighbours_1, const unsigned char* num_neighbours_2, const unsigned char* num_neighbours_3){
             
-                int index = blockIdx.x * blockDim.x + threadIdx.x;
-                int stride = blockDim.x * gridDim.x;
-                        
-                for (int idx = index; idx < sizeof(state); idx += stride){
-                    
-                    // If no conditions are met, retain old state
-                    
-                    // Neighbourhood 0
-                    // If the cell has between 0 and 17 neighbours, it dies.
-                    // If the cell has between 40 and 42 neighbours, it lives/spawns.
-                    if (0 <= num_neighbours[idx] && num_neighbours[idx] <= 170){
-                        state[idx] = 0;
-                    }
-                    else if (40 <= num_neighbours[idx] && num_neighbours[idx] <= 42){
-                        state[idx] = 1;
-                    }
-         
-                    // Neighbourhood 1
-                    // If the cell has between 10 and 13 neighbours, it lives/spawns.
-                    if (10 <= num_neighbours[idx + 1 * sizeof(state)] && num_neighbours[idx + 1 * sizeof(state)] <= 13){
-                        state[idx] = 1;
-                    }
-         
-                    // Neighbourhood 2
-                    // If the cell has between 9 and 21 neighbours, it dies.
-                    if (9 <= num_neighbours[idx + 2 * sizeof(state)] && num_neighbours[idx + 2 * sizeof(state)] <= 21){
-                        state[idx] = 0;
-                    }
-                    
-                    // Neighbourhood 3
-                    // If the cell has between 78 and 89 neighbours, it dies.
-                    // If the cell has more than 108 neighbours, it dies.            
-                    if ((78 <= num_neighbours[idx + 3 * sizeof(state)] && num_neighbours[idx + 3 * sizeof(state)] <= 89) || 108 < num_neighbours[idx + 3 * sizeof(state)]) {
-                        state[idx] = 0;
-                    }
+                int idx = blockIdx.x * blockDim.x + threadIdx.x;
+                // int stride = blockDim.x * gridDim.x;
+                
+                //for (int idx = index; idx < sizeof(state); idx += stride){
+
+                // If no conditions are met, retain old state
+                // Neighbourhood 0
+                // If the cell has between 0 and 17 neighbours, it dies.
+                // If the cell has between 40 and 42 neighbours, it lives/spawns.
+                if (0 <= num_neighbours_0[idx] && num_neighbours_0[idx] <= 17){
+                    state[idx] = 0;
                 }
+                else if (40 <= num_neighbours_0[idx] && num_neighbours_0[idx] <= 42){
+                    state[idx] = 1;
+                }
+                
+                // Neighbourhood 1
+                // If the cell has between 10 and 13 neighbours, it lives/spawns.
+                if (10 <= num_neighbours_1[idx] && num_neighbours_1[idx] <= 13){
+                    state[idx] = 1;
+                }
+                // Neighbourhood 2
+                // If the cell has between 9 and 21 neighbours, it dies.
+                if (9 <= num_neighbours_2[idx] && num_neighbours_2[idx] <= 21){
+                    state[idx] = 0;
+                }
+                // Neighbourhood 3
+                // If the cell has between 78 and 89 neighbours, it dies.
+                // If the cell has more than 108 neighbours, it dies.
+                if ((78 <= num_neighbours_3[idx] && num_neighbours_3[idx] <= 89) || 108 < num_neighbours_3[idx]) {
+                    state[idx] = 0;
+                }
+                state[idx] = 0;
+                //}
             }
             ''',
             'apply_rules'
         )
-
-        # Simple code to test your rules for logical correctness on init
-        # neighbours_temp = cp.asarray([[0, 41, 20], [13, 30, 50]], cp.int8)
-        # state_temp = cp.asarray([[1, 0, 1], [0, 0, 1]], cp.int8)
-        # step_stemp = 0
-        # print(f'Result: {self.condition_kernel(state_temp, neighbours_temp, cp.int8(step_temp))}\n')
 
     # TODO: rewrite this doc
     """
@@ -160,11 +152,13 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
     Then apply the condition of the current step to each value of the array.
     """
     def calculate_next_state(self, state):
-        num_neighbours = cp.empty((4, cp.shape(state)[0], cp.shape(state)[1]), dtype=cp.int8)
+        num_neighbours = cp.zeros((4, cp.shape(state)[0], cp.shape(state)[1]), dtype=cp.uint8)
         for i in range(0, len(self.neighbours) - 1):
-            num_neighbours[i] = signal.fftconvolve(state, self.neighbours[i], mode='same')
+            num_neighbours[i] = signal.fftconvolve(state, self.neighbours[i], mode='same').astype(cp.uint8)
 
-        self.apply_rules_kernel(state.astype(cp.int8), num_neighbours.astype(cp.int8), state)
+        # Execute Kernel (Grid size, block size, function args)
+        self.apply_rules_kernel((256,), (256,), (state, num_neighbours[0], num_neighbours[1], num_neighbours[2], num_neighbours[3]))
+
         return state
 
 

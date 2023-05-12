@@ -27,10 +27,10 @@ GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
 
 # TODO: adjust the params to the new implementation style (switch between rulesets, enable/disable rulefeed etc)
-INIT_MODE = "empty"
+INIT_MODE = "random"
 GOL_PERCENTAGE = 0.9  # The part of the screen that is made up by the GOL (the rest is the rule feed preview)
 MAX_STEPS = 1200000  # How long to run
-DISPLAY_INTERVAL = 100  # How often to visually update the state
+DISPLAY_INTERVAL = 100  # How often to visually update the state (in steps)
 
 RULE = 30  # `RULE` specifies which cellular automaton rule to use.
 X_OFFSET = 0  # `X_OFFSET` specifies how far from the center to place the initial first pixel.
@@ -140,7 +140,7 @@ class CellularAutomaton:
 
         self.decay = visible_state
 
-        # TODO: rework this to be a) configurable and b) working with MNCAs
+        # TODO: rework this to be a) easily configurable and b) working with MNCAs
         # self.decay += 1
         # self.decay = cp.clip(self.decay, None, len(self.colors) - 1)
         # self.decay *= 1 - visible_state
