@@ -124,7 +124,7 @@ class RulesetMultipleNeighbourhoods(RulesetInterface):
                 
                 // Neighbourhood 1
                 // If the cell has between 10 and 13 neighbours, it lives/spawns.
-                if (10 <= num_neighbours_1[idx] && num_neighbours_1[idx] <= 13){
+                if (10 <= num_neighbours_1[idx] && num_neighbours_1[idx] <= 11){
                     state[idx] = 1;
                 }
                 

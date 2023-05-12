@@ -21,7 +21,7 @@ from ruleset_mnca import RulesetMultipleNeighbourhoods
 # visible window, essentially hiding the wrapping and/or dying out aspects of
 # the state.
 # TODO: cleanup the padding, we don't need it anymore
-STATE_WIDTH = 4000 // 2
+STATE_WIDTH = 3500 // 2
 STATE_HEIGHT = 1500 // 2
 GOL_STATE_WIDTH_PADDING = STATE_WIDTH
 GOL_STATE_HEIGHT_PADDING = STATE_HEIGHT
@@ -165,7 +165,7 @@ class CellularAutomaton:
 def main():
     # writer = video_writer.Writer(fps=FPS, high_quality=HIGH_QUALITY)
     animation = CellularAutomaton(STATE_WIDTH, STATE_HEIGHT)
-    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+    cv2.namedWindow("CA", cv2.WINDOW_GUI_NORMAL | cv2.WINDOW_AUTOSIZE | cv2.WINDOW_KEEPRATIO)
 
     # Step through the animation and display the current state every DISPLAY_INTERVAL steps
     for step in tqdm.trange(MAX_STEPS):
